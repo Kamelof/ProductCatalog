@@ -1,6 +1,5 @@
 using ProductCatalog.Application.Abstractions;
 using ProductCatalog.Domain.Entities;
-using ProductCatalog.Infrastructure.Data;
 
 namespace ProductCatalog.Infrastructure.Repositories;
 
@@ -8,11 +7,6 @@ public class MockProductRepository : IProductRepository
 {
     private readonly Dictionary<int, Product> _products;
     private readonly Lock _lock = new();
-
-    public MockProductRepository()
-        : this(SeedData.Products)
-    {
-    }
 
     public MockProductRepository(IEnumerable<Product> products)
     {
