@@ -1,5 +1,6 @@
 using Asp.Versioning;
 using ProductCatalog.Api.ErrorHandling;
+using ProductCatalog.Api.Swagger;
 using ProductCatalog.Application;
 using ProductCatalog.Infrastructure;
 
@@ -16,7 +17,15 @@ builder.Services
         options.ReportApiVersions = true;
         options.ApiVersionReader = new UrlSegmentApiVersionReader();
     })
-    .AddMvc();
+    .AddMvc()
+    .AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'V";
+        options.SubstituteApiVersionInUrl = true;
+    });
+
+builder.Services.AddSwaggerGen();
+builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure();
@@ -25,6 +34,20 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(options =>
+    {
+        foreach (var description in app.DescribeApiVersions())
+        {
+            options.SwaggerEndpoint(
+                $"/swagger/{description.GroupName}/swagger.json",
+                description.GroupName.ToUpperInvariant());
+        }
+    });
+}
 
 app.UseHttpsRedirection();
 app.MapControllers();
