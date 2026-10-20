@@ -27,6 +27,9 @@ public class Product
 
     public void UpdateDescription(string description)
     {
+        ArgumentException.ThrowIfNullOrWhiteSpace(description);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(description.Length, DescriptionMaxLength, nameof(description));
+
         Description = description;
     }
 }

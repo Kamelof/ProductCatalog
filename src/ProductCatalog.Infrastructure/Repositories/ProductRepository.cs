@@ -17,6 +17,9 @@ public class ProductRepository(ProductCatalogDbContext context) : IProductReposi
 
     public async Task<IReadOnlyList<Product>> GetPageAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(skip);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(take);
+
         return await context.Products
             .AsNoTracking()
             .OrderBy(p => p.Id)

@@ -24,6 +24,9 @@ public class MockProductRepository : IProductRepository
 
     public Task<IReadOnlyList<Product>> GetPageAsync(int skip, int take, CancellationToken cancellationToken = default)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(skip);
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(take);
+
         lock (_lock)
         {
             IReadOnlyList<Product> result = Ordered().Skip(skip).Take(take).ToList();

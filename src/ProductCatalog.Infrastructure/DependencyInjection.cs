@@ -59,12 +59,10 @@ public static class DependencyInjection
             return DataSource.Mock;
         }
 
-        if (!Enum.TryParse<DataSource>(value, ignoreCase: true, out var dataSource) || !Enum.IsDefined(dataSource))
-        {
-            throw new InvalidOperationException(
+        var name = Enum.GetNames<DataSource>()
+            .FirstOrDefault(n => string.Equals(n, value.Trim(), StringComparison.OrdinalIgnoreCase))
+            ?? throw new InvalidOperationException(
                 $"Unknown {DataSourceKey} '{value}'. Allowed values: {string.Join(", ", Enum.GetNames<DataSource>())}.");
-        }
-
-        return dataSource;
+        return Enum.Parse<DataSource>(name);
     }
 }
