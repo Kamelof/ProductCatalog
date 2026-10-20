@@ -54,7 +54,10 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
+if (!app.Configuration.GetValue<bool>("DOTNET_RUNNING_IN_CONTAINER"))
+{
+    app.UseHttpsRedirection();
+}
 app.MapControllers();
 
 await app.RunAsync();
