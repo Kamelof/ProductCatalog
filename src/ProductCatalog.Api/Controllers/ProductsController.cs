@@ -1,4 +1,5 @@
-﻿using Asp.Versioning;
+using System.Net.Mime;
+using Asp.Versioning;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using ProductCatalog.Api.Contracts;
@@ -11,12 +12,11 @@ namespace ProductCatalog.Api.Controllers;
 [ApiVersion(1.0)]
 [ApiVersion(2.0)]
 [Route("api/v{version:apiVersion}/products")]
-[Produces("application/json")]
 public class ProductsController(IProductService productService) : ControllerBase
 {
     [HttpGet]
     [MapToApiVersion(1.0)]
-    [ProducesResponseType<IReadOnlyList<ProductDto>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<IReadOnlyList<ProductDto>>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
     public async Task<ActionResult<IReadOnlyList<ProductDto>>> GetAll(CancellationToken cancellationToken)
     {
         var products = await productService.GetAllAsync(cancellationToken);
@@ -25,8 +25,8 @@ public class ProductsController(IProductService productService) : ControllerBase
 
     [HttpGet]
     [MapToApiVersion(2.0)]
-    [ProducesResponseType<PagedResult<ProductDto>>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<PagedResult<ProductDto>>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, MediaTypeNames.Application.ProblemJson)]
     public async Task<ActionResult<PagedResult<ProductDto>>> GetPaged(
         [FromQuery] int page = Paging.DefaultPage,
         [FromQuery] int pageSize = Paging.DefaultPageSize,
@@ -37,8 +37,8 @@ public class ProductsController(IProductService productService) : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    [ProducesResponseType<ProductDto>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProductDto>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, MediaTypeNames.Application.ProblemJson)]
     public async Task<ActionResult<ProductDto>> GetById(int id, CancellationToken cancellationToken)
     {
         var product = await productService.GetByIdAsync(id, cancellationToken);
@@ -51,10 +51,10 @@ public class ProductsController(IProductService productService) : ControllerBase
     }
 
     [HttpPatch("{id:int}/description")]
-    [Consumes("application/json")]
-    [ProducesResponseType<ProductDto>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [Consumes(MediaTypeNames.Application.Json)]
+    [ProducesResponseType<ProductDto>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest, MediaTypeNames.Application.ProblemJson)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, MediaTypeNames.Application.ProblemJson)]
     public async Task<ActionResult<ProductDto>> UpdateDescription(
         int id,
         UpdateProductDescriptionRequest request,
