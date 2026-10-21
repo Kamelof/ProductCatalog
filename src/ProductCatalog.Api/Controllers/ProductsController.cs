@@ -14,6 +14,8 @@ namespace ProductCatalog.Api.Controllers;
 [Route("api/v{version:apiVersion}/products")]
 public class ProductsController(IProductService productService) : ControllerBase
 {
+    /// <summary>Returns all products ordered by id.</summary>
+    /// <response code="200">List of products.</response>
     [HttpGet]
     [MapToApiVersion(1.0)]
     [ProducesResponseType<IReadOnlyList<ProductDto>>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
@@ -23,6 +25,11 @@ public class ProductsController(IProductService productService) : ControllerBase
         return Ok(products);
     }
 
+    /// <summary>Returns one page of products ordered by id.</summary>
+    /// <param name="page">Page number, starting at 1.</param>
+    /// <param name="pageSize">Items per page, from 1 to 100.</param>
+    /// <response code="200">Requested page. A page past the end has no items.</response>
+    /// <response code="400">Page or page size is out of range.</response>
     [HttpGet]
     [MapToApiVersion(2.0)]
     [ProducesResponseType<PagedResult<ProductDto>>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
@@ -36,6 +43,10 @@ public class ProductsController(IProductService productService) : ControllerBase
         return result.IsSuccess ? Ok(result.Value) : ToProblem(result.Error);
     }
 
+    /// <summary>Returns a product by id.</summary>
+    /// <param name="id">Product id.</param>
+    /// <response code="200">The product.</response>
+    /// <response code="404">Product does not exist.</response>
     [HttpGet("{id:int}")]
     [ProducesResponseType<ProductDto>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound, MediaTypeNames.Application.ProblemJson)]
@@ -50,6 +61,12 @@ public class ProductsController(IProductService productService) : ControllerBase
         return Ok(product);
     }
 
+    /// <summary>Updates the product description. Other product fields are not changed.</summary>
+    /// <param name="id">Product id.</param>
+    /// <param name="request">New description, required, at most 4000 characters.</param>
+    /// <response code="200">The updated product.</response>
+    /// <response code="400">Description is missing, blank, too long or contains control characters.</response>
+    /// <response code="404">Product does not exist.</response>
     [HttpPatch("{id:int}/description")]
     [Consumes(MediaTypeNames.Application.Json)]
     [ProducesResponseType<ProductDto>(StatusCodes.Status200OK, MediaTypeNames.Application.Json)]

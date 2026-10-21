@@ -174,5 +174,7 @@ public class ProductsApiTests(ProductCatalogApiFactory factory) : IClassFixture<
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var document = await response.Content.ReadAsStringAsync();
         document.ShouldContain($"\"{expectedPath}\"");
+        document.ShouldContain("Returns a product by id.");
+        document.ShouldContain("Updates the product description.");
     }
 }

@@ -14,6 +14,8 @@ public sealed class ConfigureSwaggerOptions(IApiVersionDescriptionProvider provi
         {
             options.SwaggerDoc(description.GroupName, CreateInfo(description));
         }
+
+        options.IncludeXmlComments(typeof(ConfigureSwaggerOptions).Assembly);
     }
 
     private static OpenApiInfo CreateInfo(ApiVersionDescription description)
