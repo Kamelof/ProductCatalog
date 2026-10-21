@@ -1,5 +1,9 @@
 # Product Catalog API
 
+[![CI](https://github.com/Kamelof/ProductCatalog/actions/workflows/ci.yml/badge.svg)](https://github.com/Kamelof/ProductCatalog/actions/workflows/ci.yml)
+
+**Quick start:** run `dotnet run --project src/ProductCatalog.Api` and open http://localhost:5202/swagger (mock data, no database needed).
+
 REST API for an e-shop product catalog. It lists products (v1 returns everything, v2 is paginated), returns a single product by id and lets you update a product description.
 
 Built with .NET 10, ASP.NET Core controllers, EF Core 10 and SQL Server. The API can also run on in-memory mock data, so SQL Server is optional.
@@ -63,6 +67,20 @@ Starts SQL Server 2022 and the API in containers. The database is created, migra
 
 Data is stored in the `sql-data` volume, so it survives restarts. To start again from the seed data, run `docker compose down -v`.
 
+To check that the API really uses SQL Server, update a description, restart the API container and read the product again:
+
+```bash
+curl -X PATCH http://localhost:8080/api/v1/products/4/description \
+  -H "Content-Type: application/json" \
+  -d '{ "description": "Large AMOLED display and 5110 mAh battery." }'
+
+docker compose restart api
+
+curl http://localhost:8080/api/v1/products/4
+```
+
+The second request still returns the new description. With mock data it would be gone after the restart. I ran this check on Windows with Docker Desktop: on a fresh volume, the API applied the `InitialCreate` migration on startup, `GET /api/v2/products?page=3&pageSize=10` returned products 21–28 with `totalCount: 28` and `totalPages: 3`, and the updated description was still there after the restart, both through the API and in the `Products` table.
+
 ### Option 3: run locally against SQL Server
 
 On Windows with LocalDB, the Development connection string already points to `(localdb)\MSSQLLocalDB`, so only the data source needs switching:
@@ -95,7 +113,7 @@ No secrets are stored in the repository. The only committed connection string is
 
 ## API
 
-Swagger UI is available at `/swagger` in the Development environment and has a separate document for each API version.
+Swagger UI is available at `/swagger` in the Development environment and has a separate document for each API version. Endpoint descriptions, parameters and response codes come from the XML comments on the controller.
 
 | Method | URL | Description |
 |---|---|---|
@@ -240,9 +258,11 @@ The tests use xUnit, NSubstitute for mocks and Shouldly for assertions. Test nam
 | `Application` | `ProductService` with a mocked repository: paging slices, partial and out-of-range pages, total pages, invalid paging, not found, updates that change only the description, validation stopping the save. Also `ProductValidator` boundaries and forbidden characters. |
 | `Domain` | `Product.UpdateDescription` rules |
 | `Infrastructure` | One abstract test class run against both repositories: the mock repository and the EF Core repository on SQLite in memory. Also data source configuration parsing. |
-| `Api` | `WebApplicationFactory` integration tests for every endpoint and error case, ProblemDetails responses, a generic 500 without leaking exception details, and Swagger loading for v1 and v2 (and hidden outside Development). |
+| `Api` | Controller unit tests: each action is called directly with a mocked `IProductService` and checked for `200`, `400` and `404`. Integration tests with `WebApplicationFactory` cover every endpoint and error case over HTTP, ProblemDetails responses, a generic 500 without leaking exception details, and Swagger loading for v1 and v2 with descriptions (and hidden outside Development). |
 
 The EF Core repository tests use SQLite in memory to keep the tests fast and independent of Docker. SQLite doesn't enforce column lengths, so the database schema itself is checked by the migration rather than by these tests.
+
+GitHub Actions (`.github/workflows/ci.yml`) builds the solution and runs the tests on every push and pull request to `main`, then builds the Docker image. Test results are uploaded as a build artifact.
 
 ## Database migrations
 
@@ -267,5 +287,4 @@ The `--DataSource=Sql` argument is needed because the API defaults to mock data,
 - **Integration tests against real SQL Server** with Testcontainers, to cover SQL Server-specific behaviour that SQLite doesn't have, such as column length limits.
 - **Health checks** (`/health`), including a database check.
 - **Rate limiting** and **response caching or ETags** for the read endpoints. v1 returns the whole catalog in one response, which won't scale for a large catalog, so it could be marked as deprecated in favour of v2.
-- **A CI pipeline** that builds, runs the tests and builds the Docker image on every push.
 - **Structured logging and tracing** with OpenTelemetry.
